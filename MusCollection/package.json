@@ -1,0 +1,19 @@
+{
+  "name": "MusCollection",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "3.2.6",
+    "ejs": "*",
+    "express-ejs-layouts": "^2.1.0",
+    "express-session": "^1.13.0",
+    "sequelize": "*",
+    "tedious": "^1.14.0",
+    "async": "*",
+    "dateformat": "^1.0.12",
+    "log4js": "^0.6.35"
+  }
+}

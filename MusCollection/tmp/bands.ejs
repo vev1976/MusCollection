@@ -1,0 +1,6 @@
+<%- contentFor('body') %>
+<div>
+  <% for (key in bands) {%>
+     <li><a href=/bands/<%=bands[key]%>> <%=bands[key]%> </a></li>
+  <%} %>
+</div>
