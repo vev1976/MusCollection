@@ -6,14 +6,18 @@
     "start": "node app.js"
   },
   "dependencies": {
-    "express": "3.2.6",
+    "express": "*",
     "ejs": "*",
-    "express-ejs-layouts": "^2.1.0",
-    "express-session": "^1.13.0",
+    "express-ejs-layouts": "*",
+    "express-session": "*",
     "sequelize": "*",
-    "tedious": "^1.14.0",
+    "tedious": "*",
     "async": "*",
-    "dateformat": "^1.0.12",
-    "log4js": "^0.6.35"
+    "dateformat": "*",
+    "log4js": "*",
+    "body-parser":"*",
+    "cookie-parser":"*",
+    "multer":"*",
+    "serve-favicon": "*"
   }
 }

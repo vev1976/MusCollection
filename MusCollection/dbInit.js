@@ -98,7 +98,7 @@ function updateDB(major, minor, version, done){
          }
          else {
             console.log('Branch ', major, minor, ' has been updated successfully!');
-            db.Models = require("./model/models").init(db);
+            require("./model/models").init(db);
        //     console.log(db.Models);
             done(null, db);
          }

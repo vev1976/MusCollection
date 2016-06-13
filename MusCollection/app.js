@@ -1,44 +1,43 @@
+global.CFG = {};
 
 
-global.prj = {};
-G = global.prj;
-
-
-var express = require('express')
-  , routes = require('./routes')
-  , user = require('./routes/user')
-  , http = require('http')
-  , path = require('path');
-var expressLayouts = require('express-ejs-layouts');
 var dbInit = require('./dbInit');
 
-G.env = require("./config/config");
+CFG.env = require("./config/config");
 
 
 function startapp() {
-  
+ 
+  var express = require('express');
+  var routes = require('./routes');
+  var user = require('./routes/user');
+  var http = require('http');
+  var path = require('path');
+  var expressLayouts = require('express-ejs-layouts');
+  var favicon = require('serve-favicon');
+  var logger = require('log4js');
   var app = express();
-  
-  var index = require('./routes/index');
   
   //all environments
   app.set('port', process.env.PORT || 3000);
-  app.set('views', __dirname + '/views');
+  app.set('views', path.join(__dirname,'/views'));
   app.set('view engine', 'ejs');
   app.set('view options', {layout : true});
+
   app.use(expressLayouts);
-  app.use(express.favicon());
-  app.use(express.logger('dev'));
-  app.use(express.bodyParser());
-  app.use(express.methodOverride());
-  app.use(app.router);
+  app.use(favicon(path.join(__dirname,'public','favicon.png')));
+  app.use(logger.connectLogger(logger.getLogger("HTTP:"),{format:":method :url :status :response-time ms - :content-length"}));
   app.use(express.static(path.join(__dirname, 'public')));
+ // console.log("before -------------");
+   
   
-  //development only
+  var index = require('./routes/index');
+  
+/*  //development only
   if ('development' === app.get('env')) {
      app.use(express.errorHandler());
   }
-  
+ */
   app.use("/", index);
   
 
@@ -80,9 +79,9 @@ function startapp() {
 }
 
 
-dbInit(G.env, function(err, dbref){
+dbInit(CFG.env, function(err, dbref){
     if (!err) {
-       G.db = dbref;
+       CFG.db = dbref;
        startapp();
     }
     else {
@@ -90,8 +89,6 @@ dbInit(G.env, function(err, dbref){
        process.exit(-1);
     }
 });
-
-
 
 
 
