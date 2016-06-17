@@ -1,5 +1,6 @@
-global.CFG = {};
 
+
+global.CFG = {};
 
 var dbInit = require('./dbInit');
 
@@ -31,46 +32,19 @@ function startapp() {
  // console.log("before -------------");
    
   
-  var index = require('./routes/index');
+  var index = require("./routes/index");
+  var bands = require("./routes/bands");
   
 /*  //development only
   if ('development' === app.get('env')) {
      app.use(express.errorHandler());
   }
  */
-  app.use("/", index);
   
+  app.use("/bands", bands);
+  app.use("/", index);
 
-  app.get('/bands/:name?', function(req, res, next) {
-    var name = req.params.name;
-    for (key in bands) {
-      if (bands[key] === name) {
-        res.render('band',{page_title : 'The best group',
-                         band_name  : bands[key],
-                         layout : 'band_layout'}
-        );
-        return;
-      }
-    }
-    next();
-  });
-
-  app.get('/bands/', function(req, res) {
-  /*	var body = '';
-    for (key in bands) {
-      body += '<a href=/bands/' + bands[key] + '>' + bands[key] + '</a><br />';
-    }
-    res.send(body);*/
-    res.render('bands',{bands : bands,
-          page_title : 'Groups'})
-
-  });
-
-
-  app.get('/bands/*+', function(req, res) {
-    res.send('Unknown band!')
-  });
-
+ 
   
   http.createServer(app).listen(app.get('port'), function(){
      console.log('Express server listening on port ' + app.get('port'));
