@@ -46,7 +46,7 @@ function make_execFile(filename, major, minor, version) {
                   });
              } else {
                   t.rollback().then(callback(err));
-             }
+             };
            });
        });
   };
@@ -57,7 +57,7 @@ function make_checkFile(folder, file, outputarray) {
   return function(callback) {
         var file_patt   = /update([0-9]+)[.]sql/i;
         var res = file_patt.exec(file);
-        if (res !== null) {
+        if (res != null) {
            fs.access(path.join(folder,file), fs.R_OK, function(err) {
               if (!err) {
                 outputarray[Number(res[1])] = path.join(folder,file);
@@ -66,7 +66,7 @@ function make_checkFile(folder, file, outputarray) {
            });
         } else {
            callback();
-        }
+        };
         
   };
 }
@@ -98,14 +98,14 @@ function updateDB(major, minor, version, done){
          }
          else {
             console.log('Branch ', major, minor, ' has been updated successfully!');
-            require("./model/models").init(db);
+            db.Models = require("./model/models").init(db);
        //     console.log(db.Models);
             done(null, db);
          }
          return;
       });
   });
-}
+};
 
 function checkDB_version(env, done) {
  
@@ -113,14 +113,10 @@ function checkDB_version(env, done) {
     if (!db) {
       done({message:'Can not connect to database!'}, null);
       return;
-    }
+    };
   
-  if (!env.dbupdatepath) {
-     upd_path = env.dbupdatepath;
-  }
-  if (!env.dbscript_delimiter) {
-     script_delimiter = env.dbscript_delimiter;
-  }
+  if (!env.dbupdatepath) upd_path = env.dbupdatepath;
+  if (!env.dbscript_delimiter) script_delimiter = env.dbscript_delimiter;
     
   db.query(select_version, { type: db.QueryTypes.SELECT})
        .then(function(results){
@@ -132,7 +128,7 @@ function checkDB_version(env, done) {
                  updateDB(0, 0, -1, done);
              }
         }, function(err){
-              if (err.message === 'Invalid object name \'db_version\'.') {
+              if (err.message == 'Invalid object name \'db_version\'.') {
                  updateDB(0, 0, -1, done);
               } else {
                  console.log(err);
