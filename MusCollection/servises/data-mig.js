@@ -3,7 +3,6 @@ var fs = require('fs');
 var logger = require('log4js').getLogger("Data Migrator");
 var csv = require("fast-csv");
 var path = require("path");
-        
 
 var csvOption = {
         headers: false,
@@ -31,77 +30,45 @@ var getPurpose = function (header, testRowKeys) {
         }
     }
     return id;
-};
-
-
-function makeWhere(keys, header, data){
-   var s = "";
-   for (var i=0;i<keys.length;i++){
-       var id = header.indexOf(keys[i]);
-       s = s + (s==""?s:" and ") + keys[i] + " = '" + data[id] + "'";
-   }
-   return s;
 }
 
-function makeValues(fields, header, data){
-     var s = "";
-     for (var i=0;i<fields.length;i++){
-         var id = header.indexOf(fields[i]);
-         s = s + (s==""?s:", ") + "'" + data[id] + "'";
-     }
-     return s;
+
+function makeJSON(keys, fieldMap, header, data){
+	var obj = {};
+    for (var i=0;i<keys.length;i++)
+	     obj[(fieldMap[keys[i]]?fieldMap[keys[i]]:keys[i])] = data[header.indexOf(keys[i])] ;
+	return obj;	
 }
 
 
 function loadDB(db, dataForLoad){
    return new Promise(function(resolve, reject){
-       async.forEachSeries(dataForLoad,function(oneCSV,callback_data) {
+       async.forEachSeries(dataForLoad, function(oneCSV,callback_data) {
             if (!oneCSV.data) {
                  callback_data();
                  return;
             };
-          
-            var stmt_exists = "select count(*) cn from %from% where %where%";
-            var stmt_insert = "insert into %from% (%fields%) values (%value%)";
-            stmt_exists = stmt_exists.replace("%from%", oneCSV.purpose);
-            stmt_insert = stmt_insert.replace("%from%", oneCSV.purpose).replace("%fields%", oneCSV.fields.join(","));
-
-            var sql = [];
-            for(var i=1; i<oneCSV.data.length; i++){
-                   var sql_com = {};
-                   var s = makeWhere(oneCSV.keys,oneCSV.data[0],oneCSV.data[i]);
-                   sql_com.exists = stmt_exists.replace("%where%", s);
-                   s = makeValues(oneCSV.fields,oneCSV.data[0],oneCSV.data[i])
-                   sql_com.insert = stmt_insert.replace("%value%", s);          //  oneCSV.data[i].join(",")
-                   sql.push(sql_com);
-            }
             
-            async.forEachSeries(sql,function(sql_com, callback_sql){
-          //    console.log(sql_com);
-              db.query(sql_com.exists, { type: db.QueryTypes.SELECT}).then(function(result) {
-                   if (result.length==1 && result[0].cn == '0') {
-                      db.query(sql_com.insert).then(function() {
-                        callback_sql();
-                      }, function(err){
-                        callback_sql(err);
-                      });
-                   }
-                   else callback_sql();
-              }, function(err){
-                   logger.error("DB error -->>> " + err);
-                   callback_sql(err);
-              });
+            var model = oneCSV.model;            
+            var options = [];            
+            for(var i=1; i < oneCSV.data.length; i++)
+            	options.push({ where    : makeJSON(oneCSV.keys,   model.fieldAttributeMap, oneCSV.data[0], oneCSV.data[i]),
+                               defaults : makeJSON(oneCSV.fields, model.fieldAttributeMap, oneCSV.data[0], oneCSV.data[i])
+                             });            
+            
+            async.forEachSeries(options,function(option, callback_sql){
+                model.findOrCreate(option)
+                       .spread(function(inst, created){callback_sql()})
+                       .catch(function(err){callback_sql("Error in row - " + JSON.stringify(option.where))});                       
             }, function(err) {
-                   if (err)
-                      logger.error("File " + oneCSV.filename + " was loaded with error - ", err);
+                   if (err)                     
+                      logger.error("File " + oneCSV.filename + " was not loaded completely! ", err);
                    else
                       logger.info("File " + oneCSV.filename + " was loaded successfully!");
                    callback_data();
             });
             
-        }, function(err){
-              resolve();
-        });
+       }, resolve);
        
    });
 }
@@ -109,79 +76,54 @@ function loadDB(db, dataForLoad){
 
 var uploadCSV = function(db, folder) {
   return new Promise(function(resolve, reject) {
-  
-      var header = [{purpose: "app.i10n", fields: ["key", "en", "de"], keys: ["key"]},
-                    {purpose: "app.role", fields: ["name"],            keys: ["name"]}
+	  
+      var header = [{model: db.models.i10n, fields: ["key", "en", "de"], keys: ["key"]},
+                    {model: db.models.band, fields: ["name", "style_id"], keys: ["name"]},
+                    {model: db.models.style, fields: ["name"], keys: ["name"]}
                    ];
-    
-      var files = fs.readdirSync(path.resolve(folder, 'data'));
-      var callCount = files.length;
-  
-      files.forEach(function(file){
-        var data = [];
- //       console.log(path.resolve(folder, 'data', file));
-        csv.fromPath(path.resolve(folder, 'data', file), csvOption)
-                .on("data", function(row){
-                                data.push(row);
-                            })
-                .on("error", function(err){      //it works!!!
-                                 logger.error("Error in file " + file + " -->>> " + err);
-                                 callCount--;
-                                 if (callCount <= 0) {
-                                    loadDB(db,header).then(function(result){
-                                        resolve();
-                                    },function(err){
-                                        resolve();
-                                    });
-                                 }
-                             })
-                .on("end", function(){
-                              var res = getPurpose(header, data[0] ? data[0] : []);
-                              if (res < 0) {
-                                    logger.warn("File "+ file + " has unknown header!!!" + JSON.stringify(data[0] ? data[0] : []));
-                              }
-                              else {
-                                 header[res].data = data;
-                                 header[res].filename = file;
-                              };
-                              callCount--;
-                              if (callCount <= 0) {
-                                 loadDB(db,header).then(function(result){
-                                     resolve();
-                                 },function(err){
-                                     resolve();
-                                 });
-                              }
-                                
-                           });
-      });
+      try {
+         var files = fs.readdirSync(path.resolve(folder, 'data'));
+      }   
+      catch (err) {
+    	 logger.error(err);  
+    	 reject(err); 
+      }
+   //   console.log(files);
+      async.forEach(files,
+        function(file, callback){
+            var data = [];     
+	        csv.fromPath(path.resolve(folder, 'data', file), csvOption)
+	                .on("data", function(row){
+	                                data.push(row);
+	                            })
+	                .on("error", function(err){      //it works!!!
+	                                 logger.warn("Error in file " + file + " -->>> " + err);
+	                                 callback();
+	                             })
+	                .on("end", function(){
+	                              var res = getPurpose(header, data[0] ? data[0] : []);
+	                              if (res < 0) {
+	                                    logger.warn("File "+ file + " has unknown header!!!" + JSON.stringify(data[0] ? data[0] : []));
+	                              }
+	                              else {
+	                                 header[res].data = data;
+	                                 header[res].filename = file;
+	                              };
+	                              callback();
+	                           });
+        }, 
+        function(err){       	
+    	    loadDB(db,header).then(function(result){
+                resolve();
+            },function(err){
+                reject(err);
+            }); 
+        });
   });
-}
-
-var makeMeLookSync = function(fn) {
-    iterator = fn();
-    loop = function(result) {
-      !result.done && result.value.then(res =>
-        loop(iterator.next(res)));
-    };
-
-    loop(iterator.next());
-  };
-  
-var  uploadCSVSync = function(db, folder) {
-  
-  makeMeLookSync(function* () {
-      result = yield uploadCSV(db, folder);
-
-      console.log(result);
-    });
-}
-  
+}  
 
 
 module.exports = {
-  importCSV : uploadCSV,
-  importCSVSync : uploadCSVSync,
-}
-
+		  importCSV : uploadCSV,
+		}
 

@@ -2,6 +2,7 @@ var Sequelize = require('Sequelize');
 var fs        = require('fs');
 var path      = require('path');
 var async     = require('async');
+var data_mig  = require('./servises/data-mig');
 
 var upd_path = "/dbupdates"; // default
 var script_delimiter = "$$"; // default
@@ -99,8 +100,11 @@ function updateDB(major, minor, version, done){
          else {
             console.log('Branch ', major, minor, ' has been updated successfully!');
             require("./model/models").init(db);
+            data_mig.importCSV(db, path.join(__dirname,upd_path)).then(function(){
+            	done(null, db)
+            });
        //     console.log(db.Models);
-            done(null, db);
+         //   done(null, db);
          }
          return;
       });
@@ -115,10 +119,10 @@ function checkDB_version(env, done) {
       return;
     }
   
-  if (!env.dbupdatepath) {
+  if (env.dbupdatepath) {
      upd_path = env.dbupdatepath;
   }
-  if (!env.dbscript_delimiter) {
+  if (env.dbscript_delimiter) {
      script_delimiter = env.dbscript_delimiter;
   }
     

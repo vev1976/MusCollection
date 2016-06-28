@@ -1,4 +1,3 @@
-
 try {
     var Band   = require("./band");
     var Member = require("./member");
@@ -24,7 +23,6 @@ var init = function(db) {
 //        logger.error (err);
         throw (err);
     }
-    
     return model;
 };
 

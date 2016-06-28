@@ -18,6 +18,7 @@
     "body-parser":"*",
     "cookie-parser":"*",
     "multer":"*",
-    "serve-favicon": "*"
+    "serve-favicon": "*",
+    "fast-csv": "*"
   }
 }

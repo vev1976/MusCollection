@@ -3,12 +3,13 @@
 global.CFG = {};
 
 var dbInit = require('./dbInit');
+var logger = require('log4js');
 
 CFG.env = require("./config/config");
 
 
 function startapp() {
- 
+  console.log("start app");
   var express = require('express');
   var routes = require('./routes');
   var user = require('./routes/user');
@@ -16,7 +17,6 @@ function startapp() {
   var path = require('path');
   var expressLayouts = require('express-ejs-layouts');
   var favicon = require('serve-favicon');
-  var logger = require('log4js');
   var app = express();
   
   //all environments
