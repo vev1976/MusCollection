@@ -4,7 +4,7 @@ var router = express.Router();
 
  router.get('/', function(req, res) {
 
-    res.render('bands',{bands : bands,
+    res.render('bands',{bands : {},
           page_title : 'Groups'})
 
   });
@@ -26,11 +26,11 @@ var router = express.Router();
 
 
 
-
+/*
  router.get('/bands/*+', function(req, res) {
     res.send('Unknown band!')
   });
-  
+  */
   
   
   module.exports = router;

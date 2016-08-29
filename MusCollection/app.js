@@ -9,7 +9,7 @@ CFG.env = require("./config/config");
 
 
 function startapp() {
-  console.log("start app");
+  
   var express = require('express');
   var routes = require('./routes');
   var user = require('./routes/user');
@@ -42,8 +42,8 @@ function startapp() {
   }
  */
   
-  app.use("/", index);
-  app.use("/bands", bands);
+  app.use('/', index);
+  app.use('/bands', bands);
   
   
   app.use(function(req, res, next) {
