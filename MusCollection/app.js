@@ -3,7 +3,7 @@
 global.CFG = {};
 
 var dbInit = require('./dbInit');
-var logger = require('log4js');
+
 
 CFG.env = require("./config/config");
 
@@ -17,6 +17,7 @@ function startapp() {
   var path = require('path');
   var expressLayouts = require('express-ejs-layouts');
   var favicon = require('serve-favicon');
+  var logger = require('log4js');
   var app = express();
   
   //all environments
@@ -41,10 +42,15 @@ function startapp() {
   }
  */
   
-  app.use("/bands", bands);
   app.use("/", index);
-
- 
+  app.use("/bands", bands);
+  
+  app.use(function(req, res, next) {
+      
+      var err = new Error('Not Found');
+      err.status = 404;
+      next(err);
+    });
   
   http.createServer(app).listen(app.get('port'), function(){
      console.log('Express server listening on port ' + app.get('port'));
