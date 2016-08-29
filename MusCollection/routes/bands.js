@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 
- router.get('/bands', function(req, res) {
+ router.get('/', function(req, res) {
 
     res.render('bands',{bands : bands,
           page_title : 'Groups'})
@@ -10,7 +10,7 @@ var router = express.Router();
   });
 
 
- router.get('/bands/:name?', function(req, res, next) {
+ router.get('/:name?', function(req, res, next) {
     var name = req.params.name;
     for (key in bands) {
       if (bands[key] === name) {

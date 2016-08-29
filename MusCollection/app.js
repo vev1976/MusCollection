@@ -45,6 +45,7 @@ function startapp() {
   app.use("/", index);
   app.use("/bands", bands);
   
+  
   app.use(function(req, res, next) {
       
       var err = new Error('Not Found');
