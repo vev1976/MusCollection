@@ -11,7 +11,6 @@ CFG.env = require("./config/config");
 function startapp() {
   
   var express = require('express');
-  var routes = require('./routes');
   var user = require('./routes/user');
   var http = require('http');
   var path = require('path');
@@ -20,6 +19,7 @@ function startapp() {
   var logger = require('log4js');
   var app = express();
   
+  //console.log(routes);
   //all environments
   app.set('port', process.env.PORT || 3000);
   app.set('views', path.join(__dirname,'/views'));
